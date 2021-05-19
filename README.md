@@ -6,6 +6,16 @@ The API has been built using Python's Flask framework. This has allowed for easy
 
 The API manages Funding Finder's user accounts/businesses, funding opportunities, assistance organizations, and announcements.
 
+## Deployment
+Initialize virtual environment
+`source virt/bin/activate`
+
+Configure AWS CLI
+`aws configure`
+
+Update Zappa Deployment
+`zappa update rsb`
+
 ## Routes
 ### ENDPOINT:  https://ckbyvv1y8e.execute-api.us-west-2.amazonaws.com/rsb (subject to change)
 
