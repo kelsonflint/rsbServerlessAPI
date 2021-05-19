@@ -10,39 +10,39 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
 
 
 
-class UserController:
+class AdminController:
     
     def __init__(self, dynamodb=None):
         if not dynamodb:
             dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8000")
-        self.table = dynamodb.Table('Users')
-        self.SECRET_KEY = 'the quick brown fox jumps over the lazy dog'
+        self.table = dynamodb.Table('Admin')
+        self.SECRET_KEY = 'resilient small business'
 
-    def create(self, user):
+    def create(self, admin):
         #create UUID
         # epoch = time.time()
         uniqueID = "%s" % (uuid4())
-        print("User created with ID:", uniqueID)
-        passwordHash = generate_password_hash(user['password'])
+        print("Admin created with ID:", uniqueID)
+        passwordHash = generate_password_hash(admin['password'])
 
         
         try:
             response = self.table.put_item(
                 Item={
                     'id': uniqueID,
-                    'email': user['email'],
+                    'email': admin['email'],
                     'password': passwordHash,
-                    'firstName': user['firstName'],
-                    'lastName': user['lastName']
+                    'firstName': admin['firstName'],
+                    'lastName': admin['lastName']
                 }
             )
         except ClientError as e:
             print(e.response['Error']['Message'])
         else:
-            response['userId'] = uniqueID
-            response['email'] = user['email']
-            response['firstName'] = user['firstName']
-            response['lastName'] = user['lastName']
+            response['id'] = uniqueID
+            response['email'] = admin['email']
+            response['firstName'] = admin['firstName']
+            response['lastName'] = admin['lastName']
             response['token'] = self.generateAuthToken(uniqueID).decode('ascii')
             return response
 
@@ -55,9 +55,9 @@ class UserController:
         else:
             return response['Item']
 
-    def update(self, id, user):
+    def update(self, id, admin):
         try:
-            auth = self.verifyAuthToken(user['token'])
+            auth = self.verifyAuthToken(admin['token'])
             if auth and id == auth:
                 response = self.table.update_item(
                     Key={
@@ -65,10 +65,10 @@ class UserController:
                     },
                     UpdateExpression="set email=:e, firstName=:fn, lastName=:ln",
                     ExpressionAttributeValues={
-                        ':e': user['email'],
-                        #':p': user['password'],
-                        ':fn': user['firstName'],
-                        ':ln': user['lastName']
+                        ':e': admin['email'],
+                        #':p': admin['password'],
+                        ':fn': admin['firstName'],
+                        ':ln': admin['lastName']
                     },
                     ReturnValues="UPDATED_NEW"
                 )
@@ -77,7 +77,7 @@ class UserController:
         except ClientError as e:
             print(e.response['Error']['Message'])
         else:
-            print("updated user w/ id", id)
+            print("updated admin w/ id", id)
             return response
 
     def delete(self, id):
@@ -90,11 +90,11 @@ class UserController:
         except ClientError as e:
             print(e.response['Error']['Message'])
         else:
-            print("deleted user w/ id", id)
+            print("deleted admin w/ id", id)
             return response
     
 
-    def findUser(self, credentials):
+    def findAdmin(self, credentials):
         try:
             response = self.table.query(
                 IndexName='email',
@@ -108,15 +108,15 @@ class UserController:
             else:
                 return None
 
-    def verifyPassword(self, user, credentials):
-        if not user or not check_password_hash(user['password'], credentials['password']):
+    def verifyPassword(self, admin, credentials):
+        if not admin or not check_password_hash(admin['password'], credentials['password']):
             return False
         else:
             return True
 
     def generateAuthToken(self, id, expiration = 1800):
         s = Serializer(self.SECRET_KEY, expires_in = expiration)
-        return s.dumps({'id': id})
+        return s.dumps({'adminId': id})
 
     def verifyAuthToken(self, token):
         s = Serializer(self.SECRET_KEY)
@@ -126,22 +126,22 @@ class UserController:
             return None # valid token, but expired
         except BadSignature:
             return None # invalid token
-        userId = data['id']
-        return userId
+        adminId = data['adminId']
+        return adminId
 
-    def authUser(self, credentials):
+    def authAdmin(self, credentials):
 
-        user = self.findUser(credentials)
-        auth = self.verifyPassword(user, credentials)
+        admin = self.findAdmin(credentials)
+        auth = self.verifyPassword(admin, credentials)
         if auth:
-            del user["password"]
-            user["token"] = self.generateAuthToken(user["id"]).decode("ascii")
-            return user
+            del admin["password"]
+            admin["token"] = self.generateAuthToken(admin["id"]).decode("ascii")
+            return admin
         else:
             return {"error": "email or password was incorrect"}
 
 if __name__ == '__main__':
-    controller = UserController()
+    controller = AdminController()
     controller.create({
                     'id': "3",
                     'email': "meme@gmail.com",
@@ -149,14 +149,14 @@ if __name__ == '__main__':
                     'firstName': "first",
                     'lastName': "last"
                 })
-    user1 = controller.get("3")
-    if user1:
-        print('get user succeded')
-        pprint(user1, sort_dicts=False)
+    admin1 = controller.get("3")
+    if admin1:
+        print('get admin succeded')
+        pprint(admin1, sort_dicts=False)
     else:
         print('failed')
-    user1['email'] = "change@gmail.com"
-    controller.update("3", user1)
+    admin1['email'] = "change@gmail.com"
+    controller.update("3", admin1)
     changed1 = controller.get("3")
     print(changed1['email'])
     controller.delete("3")

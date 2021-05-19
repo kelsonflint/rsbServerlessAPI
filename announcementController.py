@@ -7,36 +7,28 @@ from boto3.dynamodb.conditions import Key, Attr
 from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 
-class FundingController:
-
+class AnnouncementController:
     def __init__(self, dynamodb=None):
         if not dynamodb:
             dynamodb = boto3.resource('dynamodb', region_name='us-west-2', endpoint_url="http://localhost:8000")
-        self.table = dynamodb.Table('Funding')
+        self.table = dynamodb.Table('Announcements')
         self.SECRET_KEY = 'resilient small business'
-
-    def create(self, funding, token):
+    def create(self, a, token):
         if self.verifyAuthToken(token):
+            uniqueId = "%s" % (uuid4())
             try:
-                response = self.table.put_item(Item=funding)
+                a['id'] = uniqueId
+                response = self.table.put_item(Item=a)
             except ClientError as e:
                 print(e.response['Error']['Message'])
             else:
-                print('created new funding', funding['fundingName'])
+                print('created new announcment', a['title'])
                 return response
-        else :
+        else:
             return {
                 "error": "invalid permissions"
             }
-
-    def getAll(self):
-        try:
-            response = self.table.scan()['Items']
-        except ClientError as e:
-            print(e.response['Error']['Message'])
-        else:
-            return response
-
+    
     def get(self, id):
         try:
             response = self.table.get_item(
@@ -49,28 +41,28 @@ class FundingController:
         else:
             return response['Item']
 
-    def update(self, id, f, token):
+    def getAll(self):
+        try:
+            response = self.table.scan()['Items']
+        except ClientError as e:
+            print(e.response['Error']['Message'])
+        else:
+            return response
+
+    def update(self, id, a, token):
         if self.verifyAuthToken(token):
             try:
                 response = self.table.update_item(
                     Key={
                         'id': id
                     },
-                    UpdateExpression="set fundingName=:fn, fundingType=:ft, provider=:p, website=:w, startDate=:sd, endDate=:ed, uses=:uses, description=:d, terms=:t, useCases=:uc, NAICS=:na, demographics=:demo, nonprofit=:non",
+                    UpdateExpression="set title=:t, description=:d, website=:w, endDate=:e, isActive=:a",
                     ExpressionAttributeValues={
-                        ':fn': f['fundingName'],
-                        ':ft': f['fundingType'],
-                        ':p': f['provider'],
-                        ':w': f['website'],
-                        ':sd': f['startDate'],
-                        ':ed': f['endDate'],
-                        ':uses': f['uses'],
-                        ':d': f['description'],
-                        ':t': f['terms'],
-                        ':uc': f['useCases'],
-                        ':na': f['NAICS'],
-                        ':demo': f['demographics'],
-                        ':non': f['nonprofit']
+                        ':t': a['title'],
+                        ':d': a['description'],
+                        ':w': a['website'],
+                        ':e': a['endDate'],
+                        ':a': a['isActive'],
                     }
                 )
             except ClientError as e:
@@ -94,13 +86,13 @@ class FundingController:
             except ClientError as e:
                 print(e.response['Error']['Message'])
             else:
-                print("deleted funding w/ id", id)
+                print("deleted announcment w/ id", id)
                 return response
         else :
             return {
                 "error": "invalid permissions"
             }
-
+    
     def verifyAuthToken(self, token):
         s = Serializer(self.SECRET_KEY)
         try:
@@ -112,6 +104,3 @@ class FundingController:
         if 'adminId' in data:
             return data['adminId']
         return None
-
-if __name__ == '__main__':
-    print('main')

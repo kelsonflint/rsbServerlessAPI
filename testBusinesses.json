@@ -13,15 +13,7 @@
 		"ownerDemographics": ["latinx, women"],
 		"reasonsForFunding": ["working capital", "Rent/Mortgage"],
 		"amountRequested": 100000,
-		"fundingTimeline": "today",
-		"poc": {
-			"firstName": "Jane",
-			"lastName": "Doe",
-			"phone": "1234567890",
-			"email": "jane@veganzzz.com",
-			"prefMethod": "email"
-		}
-
+		"fundingTimeline": "today"
 	},
 	{
         "address": "98105",
@@ -37,13 +29,6 @@
         "ownerDemographics": [
             "native"
         ],
-        "poc": {
-            "email": "john@dominos.com",
-            "firstName": "John",
-            "lastName": "Door",
-            "phone": "1234567890",
-            "prefMethod": "email"
-        },
         "reasonsForFunding": [
             "working capital",
             "Rent/Mortgage"
@@ -65,13 +50,6 @@
         "ownerDemographics": [
             "black"
         ],
-        "poc": {
-            "email": "joe@ezells.com",
-            "firstName": "Joe",
-            "lastName": "Ezell",
-            "phone": "1234567890",
-            "prefMethod": "email"
-        },
         "reasonsForFunding": [
             "working capital",
             "Rent/Mortgage"
